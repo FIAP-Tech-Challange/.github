@@ -21,29 +21,29 @@ Este projeto representa a **Fase 3** do desenvolvimento de um sistema completo d
 ```mermaid
 graph TB
     subgraph "Ponto de Acesso"
-        TOTEM[🖥️ Totens de Autoatendimento<br/>com Chave de Identificação]
-        CLIENT[👤 Cliente<br/>(opcional: identificação por CPF)]
+        TOTEM["🖥️ Totens de Autoatendimento<br/>com Chave de Identificação"]
+        CLIENT["👤 Cliente<br/>opcional: identificação por CPF"]
     end
 
     subgraph "AWS Cloud"
         subgraph "API Layer"
-            APIGW[🚪 API Gateway]
-            LAMBDA[🔐 Lambda Authorizer<br/>Validação de Cliente]
+            APIGW["🚪 API Gateway"]
+            LAMBDA["🔐 Lambda Authorizer<br/>Validação de Cliente"]
         end
 
         subgraph "Compute"
-            EKS[☸️ EKS Cluster]
-            PODS[🍔 App Service Pods]
+            EKS["☸️ EKS Cluster"]
+            PODS["🍔 App Service Pods"]
         end
 
         subgraph "Data Layer"
-            RDS[(🗄️ PostgreSQL RDS)]
-            SSM[📋 Systems Manager]
+            RDS[("🗄️ PostgreSQL RDS")]
+            SSM["📋 Systems Manager"]
         end
 
         subgraph "CI/CD"
-            ECR[📦 Container Registry]
-            S3[🗃️ Terraform State]
+            ECR["📦 Container Registry"]
+            S3["🗃️ Terraform State"]
         end
     end
 
