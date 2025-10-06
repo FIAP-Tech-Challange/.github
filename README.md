@@ -7,7 +7,9 @@ Este projeto representa a **Fase 3** do desenvolvimento de um sistema completo d
 ### 🎯 Principais Melhorias da Fase 3
 
 - **🚪 API Gateway + Serverless**: Implementação de autenticação via Lambda com validação por CPF
-- **🏗️ Arquitetura**: Segregação de códigos em repositórios especializados
+- **🔐 Sistema de Autenticação**: Validação de totens e clientes (opcional) via CPF sem senha
+- **🖥️ Totens de Autoatendimento**: Ponto único de acesso com chave de identificação
+- **🏗️ Arquitetura de Microserviços**: Segregação de códigos em repositórios especializados
 - **⚙️ CI/CD Avançado**: Deploy automatizado com proteção de branches e uso de Terraform
 - **🗄️ Banco de Dados Melhorado**: PostgreSQL com modelagem otimizada e documentação completa
 - **☁️ Infraestrutura Cloud**: Utilização de serviços serverless e cloud da AWS
@@ -18,34 +20,35 @@ Este projeto representa a **Fase 3** do desenvolvimento de um sistema completo d
 
 ```mermaid
 graph TB
-    subgraph "Frontend"
-        WEB[Web/Mobile App]
-        TOTEM[Totens de Autoatendimento]
+    subgraph "Ponto de Acesso"
+        TOTEM[🖥️ Totens de Autoatendimento<br/>com Chave de Identificação]
+        CLIENT[👤 Cliente<br/>(opcional: identificação por CPF)]
     end
 
     subgraph "AWS Cloud"
         subgraph "API Layer"
-            APIGW[API Gateway]
-            LAMBDA[Lambda Authorizer]
+            APIGW[🚪 API Gateway]
+            LAMBDA[🔐 Lambda Authorizer<br/>Validação de Cliente]
         end
 
         subgraph "Compute"
-            EKS[EKS Cluster]
-            PODS[App Service Pods]
+            EKS[☸️ EKS Cluster]
+            PODS[🍔 App Service Pods]
         end
 
         subgraph "Data Layer"
-            RDS[(PostgreSQL RDS)]
-            SSM[Systems Manager]
+            RDS[(🗄️ PostgreSQL RDS)]
+            SSM[📋 Systems Manager]
         end
 
         subgraph "CI/CD"
-            ECR[Container Registry]
-            S3[Terraform State]
+            ECR[📦 Container Registry]
+            S3[🗃️ Terraform State]
         end
     end
 
-    WEB --> APIGW
+    CLIENT -.-> TOTEM
+    TOTEM --> APIGW
     APIGW --> LAMBDA
     LAMBDA --> RDS
     APIGW --> EKS
@@ -54,39 +57,46 @@ graph TB
     PODS --> RDS
     PODS --> SSM
 
+    style TOTEM fill:#e8f5e8
     style APIGW fill:#e1f5fe
     style LAMBDA fill:#fff3e0
-    style EKS fill:#e8f5e8
+    style EKS fill:#f3e5f5
     style RDS fill:#fce4ec
 ```
 
-### Fluxo de Autenticação
+### Fluxo de Autenticação e Operações
 
 ```mermaid
 sequenceDiagram
-    participant U as Cliente (Web/Mobile)
-    participant T as Totem
+    participant C as Cliente
+    participant T as Totem (c/ Chave)
     participant G as API Gateway
     participant L as Lambda Authorizer
     participant A as App Service
     participant D as PostgreSQL
 
-    Note over U,G: Fluxo de Usuários Externos
-    U->>G: Request com CPF no header
-    G->>L: Validação do token/CPF
-    L->>D: Consulta dados do cliente
-    D-->>L: Dados do cliente
-    L-->>G: Token JWT válido
-    G->>A: Request autorizado
+    Note over C,T: Cliente interage apenas com o Totem
+    C->>T: Interação no totem (opcional: informa CPF)
 
-    Note over T,A: Fluxo de Totens (Acesso Direto)
-    T->>A: Request com token de totem
-    A->>A: Validação do token interno
-    A->>D: Operações no banco
-    D-->>A: Resultado
-    A-->>T: Response
-    A-->>G: Response (usuários)
-    G-->>U: Response final
+    Note over T,G: Totem como ponto único de acesso
+    T->>G: Request com chave do totem
+    G->>G: Validação da chave do totem
+
+    alt Cliente se identifica com CPF
+        G->>L: Validação do CPF do cliente
+        L->>D: Consulta dados do cliente
+        D-->>L: Dados do cliente (se existir)
+        L-->>G: Validação do cliente
+        G->>A: Request com dados do cliente
+    else Cliente não se identifica
+        G->>A: Request como cliente anônimo
+    end
+
+    A->>D: Operações no banco (pedido)
+    D-->>A: Resultado da operação
+    A-->>G: Response
+    G-->>T: Response
+    T-->>C: Exibe resultado no totem
 ```
 
 ## 📁 Estrutura de Repositórios
