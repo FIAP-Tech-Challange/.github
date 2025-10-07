@@ -1,5 +1,12 @@
 # 🍔 Sistema de Autoatendimento - Lanchonete
 
+## 📲 Discord dos Membros do grupo 118
+
+- davidasteixeira
+- Gabriel Sahdo - RM364903
+- Rafael - RM363594
+- Thiago Luiz - RM364455
+
 ## 📖 Visão Geral do Projeto
 
 Este projeto representa a **Fase 3** do desenvolvimento de um sistema completo de autoatendimento para lanchonetes, implementando melhorias significativas em arquitetura, segurança e práticas de desenvolvimento. O sistema utiliza tecnologias modernas de nuvem (AWS) e segue as melhores práticas de DevOps.
@@ -273,15 +280,15 @@ O banco PostgreSQL foi modelado seguindo as melhores práticas de normalização
 
 Assista à demonstração completa da arquitetura desenvolvida e execução das pipelines CI/CD:
 
-**[youtube.com](youtube.com)**
+**[Link do Video](https://youtu.be/xA6dZ2DSsW4)**
 
 O vídeo apresenta:
 
-- 🏗️ **Arquitetura na AWS**: Visão completa dos serviços provisionados
+- 🏗️ **Arquitetura do projeto**: Visão completa dos serviços provisionados
 - ⚙️ **Pipelines CI/CD**: Demonstração dos workflows automatizados
 - 🔧 **Infraestrutura como Código**: Terraform em ação
 - 🚀 **Deploy Automatizado**: Processo completo de deployment
-- 🛡️ **Segurança**: Implementação de boas práticas
+- 🛡️ **Funcionalidades**: Aplicação funcionando 100%
 
 ## 🚀 Como Executar
 
