@@ -209,7 +209,7 @@ graph LR
 - **Terraform**: Infrastructure as Code
 - **Docker**: Containerização
 - **AWS ECR**: Registry de containers
-- **AWS S3 + DynamoDB**: State management do Terraform
+- **AWS S3 + DB**: State management do Terraform
 - **Secrets Manager**: Gerenciamento seguro de credenciais
 
 ## 🛠️ Justificativas Técnicas
