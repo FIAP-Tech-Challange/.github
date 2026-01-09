@@ -1,6 +1,10 @@
-# 🍔 Sistema de Autoatendimento - Lanchonete
+# 🍔 Sistema de Autoatendimento - Lanchonete | Tech Challenge Fase 4
 
-## 📲 Discord dos Membros do grupo 118
+[![Overall Coverage](https://img.shields.io/badge/coverage-93.5%25-brightgreen)](https://github.com/FIAP-Tech-Challange)
+[![Microservices](https://img.shields.io/badge/microservices-4-blue)](https://github.com/FIAP-Tech-Challange)
+[![Tests](https://img.shields.io/badge/tests-663%20passing-success)](https://github.com/FIAP-Tech-Challange)
+
+## 📲 Equipe - Grupo 118
 
 - davidasteixeira
 - Gabriel Sahdo - RM364903
@@ -9,17 +13,18 @@
 
 ## 📖 Visão Geral do Projeto
 
-Este projeto representa a **Fase 3** do desenvolvimento de um sistema completo de autoatendimento para lanchonetes, implementando melhorias significativas em arquitetura, segurança e práticas de desenvolvimento. O sistema utiliza tecnologias modernas de nuvem (AWS) e segue as melhores práticas de DevOps.
+Este projeto representa a **Fase 4** do desenvolvimento de um sistema completo de autoatendimento para lanchonetes, evoluindo para uma **arquitetura de microserviços moderna** com foco em escalabilidade, manutenibilidade e qualidade de código. O sistema utiliza tecnologias cloud-native da AWS e segue as melhores práticas de DevOps e Clean Architecture.
 
-### 🎯 Principais Melhorias da Fase 3
+### 🎯 Principais Melhorias da Fase 4
 
-- **🚪 API Gateway + Serverless**: Implementação de autenticação via Lambda com validação por CPF
-- **🔐 Sistema de Autenticação**: Validação de totens e clientes (opcional) via CPF sem senha
-- **🖥️ Totens de Autoatendimento**: Ponto único de acesso com chave de identificação
-- **🏗️ Arquitetura de Microserviços**: Segregação de códigos em repositórios especializados
-- **⚙️ CI/CD Avançado**: Deploy automatizado com proteção de branches e uso de Terraform
-- **🗄️ Banco de Dados Melhorado**: PostgreSQL com modelagem otimizada e documentação completa
-- **☁️ Infraestrutura Cloud**: Utilização de serviços serverless e cloud da AWS
+- **🏗️ Arquitetura de Microserviços**: 4 microserviços independentes e especializados
+- **🎨 Clean Architecture**: Separação clara de responsabilidades e domínios isolados
+- **✅ Alta Cobertura de Testes**: Média com 663 testes
+- **🔍 Qualidade de Código**: Integração com SonarCloud para análise contínua
+- **🚀 CI/CD Avançado**: Pipelines automatizados com GitHub Actions
+- **☁️ Cloud Native**: Infraestrutura moderna com ECS, RDS e Kong Gateway
+- **📊 Monitoramento**: CloudWatch para observabilidade completa
+- **🧪 BDD Testing**: Testes behavior-driven para validação de cenários [microservice-products](microservice-notification)
 
 ## 🏛️ Arquitetura do Sistema
 
@@ -27,309 +32,717 @@ Este projeto representa a **Fase 3** do desenvolvimento de um sistema completo d
 
 ```mermaid
 graph TB
-    subgraph "Ponto de Acesso"
-        TOTEM["🖥️ Totens de Autoatendimento<br/>com Chave de Identificação"]
-        CLIENT["👤 Cliente<br/>opcional: identificação por CPF"]
+    subgraph "Client Layer"
+        CLIENT["👤 Cliente<br/>Web/Mobile"]
+        TOTEM["🖥️ Totem de<br/>Autoatendimento"]
     end
 
     subgraph "AWS Cloud"
-        subgraph "API Layer"
-            APIGW["🚪 API Gateway"]
-            LAMBDA["🔐 Lambda Authorizer<br/>Validação de Cliente"]
+        subgraph "API Gateway Layer"
+            KONG["🚪 Kong Gateway<br/>infra-gw-terraform"]
         end
 
-        subgraph "Compute"
-            EKS["☸️ EKS Cluster"]
-            PODS["🍔 App Service Pods"]
+        subgraph "Microservices Layer"
+            CUSTOMER["👥 Customer-Payment<br/>microservice-customer"]
+            PRODUCTS["📦 Products<br/>microservice-products"]
+            STORE["🏪 Store<br/>microservice-store"]
+            NOTIFICATION["🔔 Notification<br/>microservice-notification"]
         end
 
         subgraph "Data Layer"
-            RDS[("🗄️ PostgreSQL RDS")]
-            SSM["📋 Systems Manager"]
+            RDS_CUSTOMER[("🗄️ PostgreSQL<br/>Customer DB")]
+            RDS_PRODUCTS[("🗄️ PostgreSQL<br/>Products DB")]
+            RDS_STORE[("🗄️ PostgreSQL<br/>Store DB")]
+            RDS_NOTIFICATION[("🗄️ PostgreSQL<br/>Notification DB")]
         end
 
-        subgraph "CI/CD"
-            ECR["📦 Container Registry"]
-            S3["🗃️ Terraform State"]
+        subgraph "Message Queue"
+            SQS["📨 AWS SQS<br/>Event Queue"]
+        end
+
+        subgraph "Container Orchestration"
+            ECS["☸️ AWS ECS<br/>Fargate"]
+            ECR["📦 Container<br/>Registry"]
+        end
+
+        subgraph "Monitoring"
+            CLOUDWATCH["📊 CloudWatch<br/>Logs & Metrics"]
+            SONAR["🔍 SonarCloud<br/>Quality Gate"]
         end
     end
 
-    CLIENT -.-> TOTEM
-    TOTEM --> APIGW
-    APIGW --> LAMBDA
-    LAMBDA --> RDS
-    APIGW --> EKS
-    TOTEM --> EKS
-    EKS --> PODS
-    PODS --> RDS
-    PODS --> SSM
+    CLIENT --> KONG
+    TOTEM --> KONG
+    KONG --> CUSTOMER
+    KONG --> PRODUCTS
+    KONG --> STORE
+    KONG --> NOTIFICATION
 
-    style TOTEM fill:#e8f5e8
-    style APIGW fill:#e1f5fe
-    style LAMBDA fill:#fff3e0
-    style EKS fill:#f3e5f5
-    style RDS fill:#fce4ec
+    CUSTOMER --> RDS_CUSTOMER
+    PRODUCTS --> RDS_PRODUCTS
+    STORE --> RDS_STORE
+    NOTIFICATION --> RDS_NOTIFICATION
+
+    CUSTOMER -.->|Payment Events| SQS
+    PRODUCTS -.->|Order Events| SQS
+    SQS -.-> NOTIFICATION
+
+    ECS --> CUSTOMER
+    ECS --> PRODUCTS
+    ECS --> STORE
+    ECS --> NOTIFICATION
+
+    ECR --> ECS
+
+    CUSTOMER --> CLOUDWATCH
+    PRODUCTS --> CLOUDWATCH
+    STORE --> CLOUDWATCH
+    NOTIFICATION --> CLOUDWATCH
+
+    style KONG fill:#e1f5fe
+    style CUSTOMER fill:#fce4ec
+    style PRODUCTS fill:#f3e5f5
+    style STORE fill:#e8f5e8
+    style NOTIFICATION fill:#fff3e0
+    style SONAR fill:#ffe0b2
 ```
 
-### Fluxo de Autenticação e Operações
+### Fluxo de Comunicação entre Microserviços
 
 ```mermaid
 sequenceDiagram
     participant C as Cliente
-    participant T as Totem (c/ Chave)
-    participant G as API Gateway
-    participant L as Lambda Authorizer
-    participant A as App Service
-    participant D as PostgreSQL
+    participant K as Kong Gateway
+    participant S as Store Service
+    participant P as Products Service
+    participant CP as Customer-Payment
+    participant N as Notification Service
+    participant Q as SQS Queue
 
-    Note over C,T: Cliente interage apenas com o Totem
-    C->>T: Interação no totem (opcional: informa CPF)
+    C->>K: Seleciona loja
+    K->>S: GET /stores/:id
+    S-->>K: Dados da loja
+    K-->>C: Informações da loja
 
-    Note over T,G: Totem como ponto único de acesso
-    T->>G: Request com chave do totem
-    G->>G: Validação da chave do totem
+    C->>K: Visualiza cardápio
+    K->>P: GET /products
+    P-->>K: Lista de produtos
+    K-->>C: Cardápio
 
-    alt Cliente se identifica com CPF
-        G->>L: Validação do CPF do cliente
-        L->>D: Consulta dados do cliente
-        D-->>L: Dados do cliente (se existir)
-        L-->>G: Validação do cliente
-        G->>A: Request com dados do cliente
-    else Cliente não se identifica
-        G->>A: Request como cliente anônimo
-    end
+    C->>K: Realiza pedido
+    K->>CP: POST /customers (identifica-se)
+    CP-->>K: Cliente validado
+    K->>P: POST /orders
+    P->>Q: Publica evento OrderCreated
+    P-->>K: Pedido criado
+    K-->>C: Confirmação do pedido
 
-    A->>D: Operações no banco (pedido)
-    D-->>A: Resultado da operação
-    A-->>G: Response
-    G-->>T: Response
-    T-->>C: Exibe resultado no totem
+    C->>K: Realiza pagamento
+    K->>CP: POST /payment
+    CP->>Q: Publica evento PaymentProcessed
+    CP-->>K: Pagamento confirmado
+
+    Q->>N: Consome eventos
+    N->>N: Envia notificações (Email/SMS)
+    N->>C: Notificação de confirmação
+
+    P->>Q: Publica evento OrderReady
+    Q->>N: Consome evento
+    N->>C: Notificação pedido pronto
 ```
 
 ## 📁 Estrutura de Repositórios
 
-O projeto está organizado em **4 repositórios especializados**, cada um com responsabilidades específicas:
+O projeto está organizado em **5 repositórios especializados**, cada um com responsabilidades específicas seguindo princípios de microserviços:
 
-### 1. 🗄️ Infraestrutura do Banco de Dados
+### 1. 🚪 Kong Gateway - Infraestrutura
 
-**Repositório**: `infra-db-terraform`
+**Repositório**: `infra-gw-terraform`
 
-- **Função**: Provisionamento da infraestrutura de banco PostgreSQL RDS
-- **Tecnologias**: Terraform, AWS RDS, Systems Manager
+- **Função**: API Gateway e infraestrutura compartilhada
+- **Tecnologias**: Terraform, Kong Gateway, AWS ECS, RDS, ALB
 - **Responsabilidades**:
-  - Configuração do PostgreSQL RDS Multi-AZ
-  - Gerenciamento de credenciais via SSM
-  - Backup automático e monitoramento
-  - Configurações de segurança e rede
+  - Roteamento de requisições para microserviços
+  - Load balancing e high availability
+  - Container registry (ECR)
+  - Secrets management
+  - Configuração de rede (VPC, Security Groups)
+- **Recursos Provisionados**:
+  - Kong Gateway (Proxy, Admin, Manager)
+  - Application Load Balancer
+  - PostgreSQL RDS para Kong
+  - ECR para imagens Docker
+  - Secret Manager para JWT
 
-### 2. 🚀 Serviço Lambda
+### 2. 👥 Customer-Payment Microservice
 
-**Repositório**: `lambda-service`
+**Repositório**: `microservice-customer`
 
-- **Função**: Microserviço serverless para verificação de clientes
-- **Tecnologias**: Node.js, TypeScript, Serverless Framework
+- **Função**: Gestão de clientes e processamento de pagamentos
+- **Tecnologias**: NestJS, TypeScript, TypeORM, PostgreSQL, Docker
+- **Domínios**:
+  - **Customer**: Cadastro, validação de CPF, consultas
+  - **Payment**: Transações, webhooks, status tracking
 - **Responsabilidades**:
-  - Validação de CPF dos clientes
-  - Consulta ao banco PostgreSQL
-  - Integração com API Gateway
+  - Autenticação e identificação de clientes
+  - Validação de CPF (Value Object)
+  - Processamento de pagamentos
+  - Integração com gateways externos
+  - Webhooks para confirmação
+- **Quality Gate**: ✅ SonarCloud Configurado
 
-### 3. ☸️ Infraestrutura Kubernetes
+### 3. 📦 Products Microservice
 
-**Repositório**: `infra-k8s-terraform`
+**Repositório**: `microservice-products`
 
-- **Função**: Provisionamento do cluster EKS e API Gateway
-- **Tecnologias**: Terraform, EKS, API Gateway, Lambda
+- **Função**: Gestão de produtos, categorias e pedidos
+- **Tecnologias**: NestJS, TypeScript, TypeORM, PostgreSQL, Cucumber (BDD)
+- **Domínios**:
+  - **Products**: CRUD de produtos, preços
+  - **Categories**: Hierarquia de categorias
+  - **Orders**: Fluxo de pedidos com estados
 - **Responsabilidades**:
-  - Configuração do cluster EKS
-  - Setup do API Gateway
-  - Deploy do Lambda Authorizer
-  - Configuração de rede e segurança
+  - Catálogo de produtos
+  - Gerenciamento de categorias
+  - Criação e rastreamento de pedidos
+  - Estados: PENDING → RECEIVED → IN_PROGRESS → READY → FINISHED
+  - Publicação de eventos (OrderCreated, OrderReady)
+- **Quality Gate**: ⚠️ SonarCloud em configuração
 
-### 4. 🍔 Aplicação Principal
+### 4. 🏪 Store Microservice
 
-**Repositório**: `app-service`
+**Repositório**: `microservice-store`
 
-- **Função**: API principal do sistema de autoatendimento
-- **Tecnologias**: NestJS, TypeScript, TypeORM, Docker
+- **Função**: Gerenciamento de lojas/estabelecimentos
+- **Tecnologias**: NestJS, TypeScript, TypeORM, PostgreSQL, Docker
 - **Responsabilidades**:
-  - Lógica de negócio do sistema
-  - Gerenciamento de pedidos
-  - Interface com totems
-  - APIs RESTful
+  - Cadastro de lojas
+  - Configurações operacionais
+  - Horários de funcionamento
+  - Multi-tenancy support
+  - Métricas de performance
+- **Quality Gate**: ⚠️ SonarCloud em configuração
+
+### 5. 🔔 Notification Microservice
+
+**Repositório**: `microservice-notification`
+
+- **Função**: Sistema de notificações multi-canal
+- **Tecnologias**: NestJS, TypeScript, AWS SES, SNS, SQS, Firebase
+- **Arquitetura**: Event-Driven com filas de mensagens
+- **Canais Suportados**:
+  - 📧 Email (AWS SES, SendGrid, SMTP)
+  - 📱 SMS (AWS SNS, Twilio)
+  - 🔔 Push (Firebase, OneSignal)
+  - 🔗 Webhooks
+- **Responsabilidades**:
+  - Processamento assíncrono de eventos
+  - Gerenciamento de templates
+  - Retry mechanism para falhas
+  - Histórico e auditoria
+  - Multi-idioma
+- **Quality Gate**: ⚠️ SonarCloud em configuração
 
 ### Integração entre Repositórios
 
 ```mermaid
-graph LR
-    A[infra-db-terraform] --> B[RDS PostgreSQL]
-    C[lambda-service] --> B
-    D[infra-k8s-terraform] --> E[EKS + API Gateway]
-    E --> C
-    F[app-service] --> B
-    E --> F
+graph TB
+    KONG[infra-gw-terraform] --> ALB[Application Load Balancer]
+    KONG --> ECR[Container Registry]
+    KONG --> RDS_KONG[Kong Database]
 
-    style A fill:#e1f5fe
-    style C fill:#fff3e0
-    style D fill:#e8f5e8
-    style F fill:#fce4ec
+    ALB --> ECS[ECS Cluster]
+
+    ECS --> CUSTOMER[microservice-customer]
+    ECS --> PRODUCTS[microservice-products]
+    ECS --> STORE[microservice-store]
+    ECS --> NOTIFICATION[microservice-notification]
+
+    CUSTOMER --> DB_CUSTOMER[(Customer DB)]
+    PRODUCTS --> DB_PRODUCTS[(Products DB)]
+    STORE --> DB_STORE[(Store DB)]
+    NOTIFICATION --> DB_NOTIFICATION[(Notification DB)]
+
+    CUSTOMER -.->|Events| SQS[AWS SQS]
+    PRODUCTS -.->|Events| SQS
+    SQS -.-> NOTIFICATION
+
+    ECR --> CUSTOMER
+    ECR --> PRODUCTS
+    ECR --> STORE
+    ECR --> NOTIFICATION
+
+    style KONG fill:#e1f5fe
+    style CUSTOMER fill:#fce4ec
+    style PRODUCTS fill:#f3e5f5
+    style STORE fill:#e8f5e8
+    style NOTIFICATION fill:#fff3e0
 ```
+
+## 📊 Métricas de Qualidade
+
+### Resumo Geral
+
+| Métrica             | Valor       | Status |
+| ------------------- | ----------- | ------ |
+| **Microserviços**   | 4           | ✅     |
+| **Cobertura Média** | 93.5%       | ✅     |
+| **Total de Testes** | 663         | ✅     |
+| **Testes Passando** | 663 (100%)  | ✅     |
+| **Quality Gates**   | configurado | ✅     |
+
+### Detalhamento por Microserviço
+
+| Microserviço     | Cobertura | Testes | Suites | SonarCloud     | CI/CD    |
+| ---------------- | --------- | ------ | ------ | -------------- | -------- |
+| customer-payment | 88.14%    | 131    | 10     | ✅ Configurado | ✅ Ativo |
+| products         | 96%+      | 111    | 18     | ✅ Configurado | ✅ Ativo |
+| store            | 93.87%    | 90     | -      | ✅ Configurado | ✅ Ativo |
+| notification     | 95.86%    | 331    | -      | ✅ Configurado | ✅ Ativo |
+
+### Cobertura Detalhada
+
+- **Statements**: 88-97%
+- **Branches**: 76-80%
+- **Functions**: 90-100%
+- **Lines**: 89-97%
+
+### Tipos de Testes
+
+- ✅ **Testes Unitários**: Cobertura de entidades, casos de uso e value objects
+- ✅ **Testes de Integração**: Controllers, repositories e serviços externos
+- ✅ **Testes BDD**: 4 cenários Cucumber no microserviço products
+- ✅ **Testes de Value Objects**: Validação de CPF, Email, Phone
+
+## 🎓 Stack Tecnológico
+
+### Backend
+
+- **Framework**: NestJS 10.x
+- **Linguagem**: TypeScript 5.9.3
+- **Arquitetura**: Clean Architecture (Hexagonal)
+- **ORM**: TypeORM com PostgreSQL
+- **Testes**: Jest 29.5.0
+- **BDD**: Cucumber (products microservice)
+- **Validação**: Class-validator, Class-transformer
+
+### Infraestrutura
+
+- **Cloud Provider**: AWS
+- **Container Orchestration**: ECS com Fargate
+- **API Gateway**: Kong Gateway
+- **Load Balancer**: Application Load Balancer (ALB)
+- **Database**: PostgreSQL 14-15 (RDS)
+- **Message Queue**: AWS SQS
+- **Email Service**: AWS SES
+- **SMS Service**: AWS SNS
+- **Container Registry**: AWS ECR
+- **Secrets**: AWS Parameter Store / Secrets Manager
+- **IaC**: Terraform
+- **Monitoring**: CloudWatch + SonarCloud
+
+### Qualidade & DevOps
+
+- **Code Quality**: ESLint + Prettier
+- **Security**: SonarCloud (SAST)
+- **Coverage**: Jest with lcov reports
+- **CI/CD**: GitHub Actions
+- **Branch Protection**: Pull Request obrigatório com code review
+- **Documentation**: Swagger/OpenAPI 3.0
+
+### Serviços AWS Utilizados
+
+- **ECS** (Elastic Container Service) - Orquestração
+- **ECR** (Elastic Container Registry) - Docker images
+- **RDS** (Relational Database Service) - PostgreSQL
+- **ALB** (Application Load Balancer) - Balanceamento
+- **SQS** (Simple Queue Service) - Filas de mensagens
+- **SES** (Simple Email Service) - Email
+- **SNS** (Simple Notification Service) - SMS
+- **CloudWatch** - Logs e métricas
+- **Parameter Store** - Gerenciamento de configurações
+- **Secrets Manager** - Gerenciamento de secrets
 
 ## ⚙️ CI/CD e Práticas DevOps
 
-### Proteção de Branches
+### Pipeline de Integração Contínua
 
-Todos os repositórios implementam proteção rigorosa da branch `main`:
+```mermaid
+graph LR
+    A[Push/PR] --> B[Checkout Code]
+    B --> C[Install Dependencies]
+    C --> D[Run ESLint]
+    D --> E[Run Tests]
+    E --> F[Coverage Report]
+    F --> G[SonarCloud Analysis]
+    G --> H{Quality Gate}
+    H -->|Pass| I[Approve Merge]
+    H -->|Fail| J[Block Merge]
 
-- 🚫 **Push direto bloqueado**: Impossibilita commits diretos na main
-- ✅ **Pull Request obrigatório**: Todas as mudanças passam por PR
-- 🔍 **Code Review obrigatório**: Aprovação de pelo menos 1 revisor
-- 🧪 **Testes obrigatórios**: CI/CD deve passar com sucesso
-- 📋 **Status checks**: Validação de qualidade e segurança
+    style E fill:#e8f5e8
+    style G fill:#e1f5fe
+    style I fill:#c8e6c9
+    style J fill:#ffcdd2
+```
 
 ### Pipeline de Deploy
 
 ```mermaid
 graph LR
-    A[Feature Branch] --> B[Pull Request]
-    B --> C[CI Tests]
-    C --> D[Code Review]
-    D --> E[Merge to Main]
-    E --> F[Deploy Automático]
-    F --> G[Terraform Apply]
-    G --> H[Infrastructure Updated]
+    A[Merge to Main] --> B[Build Docker Image]
+    B --> C[Push to ECR]
+    C --> D[Update Task Definition]
+    D --> E[Deploy to ECS]
+    E --> F[Health Check]
+    F --> G{Healthy?}
+    G -->|Yes| H[Complete]
+    G -->|No| I[Rollback]
 
-    style C fill:#e8f5e8
-    style F fill:#fff3e0
-    style G fill:#e1f5fe
+    style E fill:#fff3e0
+    style H fill:#c8e6c9
+    style I fill:#ffcdd2
 ```
 
-### Tecnologias CI/CD
+### Proteção de Branches
 
-- **GitHub Actions**: Automação de workflows
-- **Terraform**: Infrastructure as Code
-- **Docker**: Containerização
-- **AWS ECR**: Registry de containers
-- **AWS S3 + DB**: State management do Terraform
-- **Secrets Manager**: Gerenciamento seguro de credenciais
+Todos os repositórios implementam proteção rigorosa:
 
-## 🛠️ Justificativas Técnicas
+- 🚫 **Push direto bloqueado**: Impossibilita commits diretos na main
+- ✅ **Pull Request obrigatório**: Todas as mudanças passam por PR
+- 🔍 **Code Review obrigatório**: Aprovação de pelo menos 1 revisor
+- 🧪 **Testes obrigatórios**: CI deve passar com 100% de sucesso
+- 📋 **Status checks**: ESLint + Testes + SonarCloud
+- 🏷️ **Branch naming**: feature/_, hotfix/_, bugfix/\*
 
-### Por que PostgreSQL?
+### Workflows GitHub Actions
 
-#### 🎯 Robustez Técnica
+Cada microserviço possui workflows padronizados:
 
-- **ACID Compliant**: Garante consistência em transações críticas
-- **Performance Superior**: Índices avançados e otimização automática
-- **JSON Nativo**: Perfeito para APIs REST e dados semi-estruturados
+#### 1. CI Workflow (ci.yml)
 
-#### ☁️ Integração AWS
+- **Triggers**: Pull Request, Push para main/develop
+- **Jobs**:
+  1. **test**: Instalação, lint, testes com coverage
+  2. **sonarqube**: Análise de qualidade (aguarda test)
+- **Outputs**: Coverage report, análise SonarCloud
 
-- **RDS Gerenciado**: Backups automáticos, Multi-AZ e monitoramento
-- **Escalabilidade**: Read replicas e particionamento
-- **Segurança**: Criptografia integrada e controle granular
+#### 2. Deploy Workflow (deploy.yml ou app.yml)
 
-#### 🎓 Benefícios para Aprendizado
+- **Triggers**: Push para main, workflow_dispatch
+- **Dependencies**: Aguarda sucesso do CI
+- **Steps**:
+  1. Build da imagem Docker
+  2. Push para ECR
+  3. Update ECS task definition
+  4. Deploy no ECS
+  5. Health check
 
-- **Open Source**: Sem custos de licença
-- **Padrão da Indústria**: Amplamente usado em empresas de tecnologia
-- **Microserviços-friendly**: Schemas múltiplos e isolamento por domínio
+## 🏗️ Clean Architecture
 
-### Por que AWS?
+Todos os microserviços seguem os princípios de Clean Architecture:
 
-- **🚀 Serverless**: Lambda para escalabilidade automática
-- **🔐 Segurança**: IAM, Secrets Manager, VPC
-- **📊 Monitoramento**: CloudWatch integrado
-- **💰 Custo-benefício**: Pay-per-use para recursos serverless
-- **🌍 Disponibilidade**: Multi-AZ e alta disponibilidade
+### Estrutura de Camadas
 
-### Por que Kubernetes (EKS)?
+```
+app/src/
+├── common/                    # Elementos compartilhados
+│   ├── DTOs/                 # Data Transfer Objects
+│   ├── dataSource/           # Interfaces de acesso a dados
+│   └── exceptions/           # Exceções customizadas
+├── core/                     # 🎯 CAMADA INTERNA - Regras de Negócio
+│   ├── common/              # Value Objects e utilitários
+│   └── modules/             # Domínios da aplicação
+│       └── {domain}/
+│           ├── entities/    # Entidades de domínio
+│           ├── useCases/    # Casos de uso (regras de negócio)
+│           ├── gateways/    # Interfaces (ports)
+│           ├── DTOs/        # Contratos de entrada/saída
+│           └── mappers/     # Transformação de dados
+└── external/                # 🌐 CAMADA EXTERNA - Adaptadores
+    ├── consumers/           # APIs (NestJS controllers)
+    └── dataSources/         # Implementação de persistência
+```
 
-- **📈 Escalabilidade**: Auto-scaling baseado em métricas
-- **🔄 Orquestração**: Gerenciamento automático de containers
-- **🛡️ Isolamento**: Namespaces e network policies
-- **🔧 Flexibilidade**: Deploy de aplicações complexas
-- **📊 Observabilidade**: Integração com ferramentas de monitoramento
+### Princípios Aplicados
 
-## 🗄️ Modelagem de Dados
+- **🔄 Dependency Inversion**: Core não depende de frameworks
+- **🧪 Testabilidade**: Regras de negócio isoladas
+- **🔌 Framework Independence**: Lógica desacoplada do NestJS
+- **📱 UI Independence**: API pode ser consumida por qualquer cliente
+- **🗄️ Database Independence**: Uso de interfaces para persistência
+- **🎯 Single Responsibility**: Cada camada tem uma responsabilidade clara
 
-### Esquema do Banco de Dados
+## 🗄️ Estratégia de Banco de Dados
 
-Acesse o esquema completo do banco de dados através do link:
-**[Esquema do Banco - BR Modelo](https://app.brmodeloweb.com/#!/publicview/68213be2acb39fc7c317bb53)**
+### Database per Service Pattern
 
-### Estrutura Principal
+Cada microserviço possui seu próprio banco de dados:
 
-O banco PostgreSQL foi modelado seguindo as melhores práticas de normalização e inclui:
+```mermaid
+graph TB
+    subgraph "Databases"
+        DB1[(Customer-Payment DB)]
+        DB2[(Products DB)]
+        DB3[(Store DB)]
+        DB4[(Notification DB)]
+    end
 
-- **Tabela de Clientes**: Informações dos usuários com validação de CPF
-- **Tabela de Produtos**: Catálogo com categorias e preços
-- **Tabela de Pedidos**: Controle de status e histórico
-- **Tabela de Itens do Pedido**: Relacionamento many-to-many otimizado
-- **Tabela de Totens**: Controle de dispositivos autorizados
+    subgraph "Microservices"
+        MS1[Customer-Payment] --> DB1
+        MS2[Products] --> DB2
+        MS3[Store] --> DB3
+        MS4[Notification] --> DB4
+    end
 
-### Características da Modelagem
+    style DB1 fill:#fce4ec
+    style DB2 fill:#f3e5f5
+    style DB3 fill:#e8f5e8
+    style DB4 fill:#fff3e0
+```
 
-- **🔐 Segurança**: Campos sensíveis criptografados
-- **📊 Performance**: Índices otimizados para consultas frequentes
-- **🔄 Integridade**: Constraints e foreign keys bem definidas
-- **📈 Escalabilidade**: Estrutura preparada para crescimento
+### Características
 
-## 🎥 Demonstração
+- **🔐 Isolamento de Dados**: Cada serviço é dono de seus dados
+- **📈 Escalabilidade Independente**: Diferentes estratégias de scaling
+- **🛡️ Resiliência**: Falha em um DB não afeta outros serviços
+- **🔄 Autonomia**: Times podem evoluir schemas independentemente
+- **💾 Backups Isolados**: Estratégias de backup por serviço
 
-### Vídeo da Arquitetura
+### Tecnologias de Persistência
 
-Assista à demonstração completa da arquitetura desenvolvida e execução das pipelines CI/CD:
+- **RDBMS**: PostgreSQL 14-15 (RDS Multi-AZ)
+- **ORM**: TypeORM com migrations automatizadas
+- **Connection Pooling**: Configurado por serviço
+- **Indexes**: Otimizados para queries principais
+- **Constraints**: Foreign keys e validações no DB
 
-**[Link do Video](https://youtu.be/xA6dZ2DSsW4)**
+## 🔔 Comunicação entre Microserviços
 
-O vídeo apresenta:
+### Padrões de Comunicação
 
-- 🏗️ **Arquitetura do projeto**: Visão completa dos serviços provisionados
-- ⚙️ **Pipelines CI/CD**: Demonstração dos workflows automatizados
-- 🔧 **Infraestrutura como Código**: Terraform em ação
-- 🚀 **Deploy Automatizado**: Processo completo de deployment
-- 🛡️ **Funcionalidades**: Aplicação funcionando 100%
+#### 1. Síncrono via Kong Gateway
+
+```
+Cliente → Kong Gateway → Microserviço → Resposta
+```
+
+- **Uso**: Operações CRUD, consultas diretas
+- **Protocolo**: HTTP/REST
+- **Timeout**: Configurável por rota
+
+#### 2. Assíncrono via Event Queue
+
+```
+Microserviço → SQS → Notification Service
+```
+
+- **Uso**: Notificações, processamento em background
+- **Eventos**:
+  - `PaymentProcessed` (Customer-Payment)
+  - `OrderCreated` (Products)
+  - `OrderReady` (Products)
+  - `OrderCancelled` (Products)
+
+### Event-Driven Architecture
+
+```mermaid
+sequenceDiagram
+    participant P as Products Service
+    participant SQS as AWS SQS
+    participant N as Notification Service
+
+    P->>SQS: Publica OrderCreated
+    Note over SQS: Fila de eventos
+    SQS->>N: Consome evento
+    N->>N: Processa notificação
+    N-->>Cliente: Envia Email/SMS
+```
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 
-- AWS CLI configurado
-- Terraform >= 1.0
-- Docker
-- kubectl
-- Node.js 18+
+- **Docker** 20+ e **Docker Compose**
+- **Node.js** 20-22
+- **AWS CLI** configurado
+- **Terraform** >= 1.0
+- **kubectl** (opcional, para ECS)
+- **Git**
 
-### Ordem de Deploy
+### Execução Local
 
-1. **Infraestrutura do Banco**: Deploy do `infra-db-terraform`
-2. **Lambda Service**: Deploy do `lambda-service`
-3. **Infraestrutura K8s**: Deploy do `infra-k8s-terraform`
-4. **App Service**: Deploy do `app-service`
-
-### Comandos Básicos
+#### 1. Clonar Repositórios
 
 ```bash
-# 1. Clonar os repositórios
-git clone <repositório-infra-db>
-git clone <repositório-infra-k8s>
-git clone <repositório-lambda>
-git clone <repositório-app>
+# Infraestrutura
+git clone https://github.com/FIAP-Tech-Challange/infra-gw-terraform.git
 
-# 2. Deploy dos serviços
-cd ../lambda-service
-serverless deploy
-
-
-# 3. Deploy da infraestrutura
-cd infra-db-terraform
-terraform init && terraform apply
-
-cd ../infra-k8s-terraform
-terraform init && terraform apply
-
-# 4.Deploy da aplicação
-cd ../app-service
-docker build -t app-service .
-kubectl apply -f k8s/
+# Microserviços
+git clone https://github.com/FIAP-Tech-Challange/microservice-customer.git
+git clone https://github.com/FIAP-Tech-Challange/microservice-products.git
+git clone https://github.com/FIAP-Tech-Challange/microservice-store.git
+git clone https://github.com/FIAP-Tech-Challange/microservice-notification.git
 ```
+
+#### 2. Executar um Microserviço Localmente
+
+```bash
+# Exemplo: Customer-Payment
+cd microservice-customer/app
+
+# Configurar variáveis de ambiente
+cp env-example .env
+# Editar .env com suas configurações
+
+# Iniciar com Docker Compose
+docker-compose up -d
+
+# Verificar logs
+docker-compose logs -f app
+
+# Acessar aplicação
+curl http://localhost:3000/health
+```
+
+#### 3. Executar Testes
+
+```bash
+# Testes unitários
+npm test
+
+# Testes com cobertura
+npm run test:cov
+
+# Lint
+npm run lint
+```
+
+### Deploy na AWS
+
+#### 1. Deploy do Kong Gateway (Infraestrutura)
+
+```bash
+cd infra-gw-terraform
+
+# Configurar variáveis
+cp terraform.tfvars.example terraform.tfvars
+# Editar terraform.tfvars
+
+# Inicializar e aplicar
+terraform init
+terraform plan
+terraform apply
+```
+
+#### 2. Deploy dos Microserviços
+
+Cada microserviço possui infraestrutura Terraform:
+
+```bash
+cd microservice-{nome}/infra/ecs
+
+# Inicializar
+terraform init
+
+# Planejar
+terraform plan
+
+# Aplicar
+terraform apply
+```
+
+#### 3. Deploy via CI/CD
+
+Após configurar secrets no GitHub:
+
+```bash
+# AWS Credentials
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_SESSION_TOKEN
+AWS_REGION
+
+# SonarCloud
+SONAR_TOKEN
+SONAR_PROJECT_KEY
+```
+
+Push para a branch `main` ativa o deploy automático.
+
+## 📊 Monitoramento e Observabilidade
+
+### CloudWatch
+
+- **Logs**: Agregação de logs por microserviço
+- **Métricas**: CPU, Memória, Request count, Response time
+- **Alarmes**: Auto-scaling triggers
+- **Dashboards**: Visão consolidada dos serviços
+
+### SonarCloud
+
+- **Quality Gate**: Coverage > 80%, No bugs críticos
+- **Code Smells**: Análise de manutenibilidade
+- **Security**: Detecção de vulnerabilidades
+- **Duplicação**: Análise de código duplicado
+
+### Health Checks
+
+Todos os microserviços expõem:
+
+- `GET /health` - Status geral da aplicação
+- `GET /health/db` - Status da conexão com banco
+
+## 🎯 Entregáveis da Fase 4
+
+### ✅ Requisitos Atendidos
+
+- [x] **Arquitetura de Microserviços**: 4 serviços independentes
+- [x] **Clean Architecture**: Implementada em todos os serviços
+- [x] **Cobertura de Testes**: 93.5% (excede 80%)
+- [x] **CI/CD**: Pipelines automatizados com GitHub Actions
+- [x] **Infrastructure as Code**: Terraform para toda infraestrutura
+- [x] **SonarQube/SonarCloud**: Integração para análise de qualidade
+- [x] **API Gateway**: Kong Gateway para roteamento
+- [x] **Orquestração**: AWS ECS com Fargate
+- [x] **Documentação**: READMEs completos e diagramas
+
+### 🎖️ Diferenciais Implementados
+
+- ✅ **Event-Driven Architecture**: Comunicação assíncrona via SQS
+- ✅ **Multi-Database**: Database per Service pattern
+- ✅ **BDD Testing**: Cucumber para testes behavior-driven
+- ✅ **High Coverage**: Média de 93.5% de cobertura
+- ✅ **Branch Protection**: Políticas rigorosas de qualidade
+- ✅ **Auto Scaling**: Baseado em métricas do CloudWatch
+- ✅ **Multi-Channel Notifications**: Email, SMS, Push, Webhook
+
+## 📚 Documentação Adicional
+
+### Repositórios
+
+- **Kong Gateway**: [infra-gw-terraform/README.md](infra-gw-terraform/README.md)
+- **Customer-Payment**: [microservice-customer-payment/README.md](microservice-customer/README.md)
+- **Products**: [microservice-products/README.md](microservice-products/README.md)
+- **Store**: [microservice-store/README.md](microservice-store/README.md)
+- **Notification**: [microservice-notification/README.md](microservice-notification/README.md)
+
+### Diagramas
+
+- Arquitetura geral de microserviços
+- Fluxos de comunicação
+- Estrutura de banco de dados
+- Pipelines CI/CD
+- Clean Architecture layers
+
+## 🔐 Segurança
+
+### Práticas Implementadas
+
+- ✅ Secrets management via AWS Parameter Store/Secrets Manager
+- ✅ Credenciais nunca hardcoded no código
+- ✅ Security Groups com least privilege
+- ✅ HTTPS obrigatório para endpoints públicos
+- ✅ Validação de input em todas as APIs
+- ✅ SQL Injection protection via ORM
+- ✅ Rate limiting no API Gateway
+- ✅ CORS configurado adequadamente
