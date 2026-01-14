@@ -4,7 +4,7 @@
 [![Microservices](https://img.shields.io/badge/microservices-4-blue)](https://github.com/FIAP-Tech-Challange)
 [![Tests](https://img.shields.io/badge/tests-663%20passing-success)](https://github.com/FIAP-Tech-Challange)
 
-## 📲 Equipe - Grupo 118
+## 📲 Equipe - Grupo 191
 
 - davidasteixeira
 - Gabriel Sahdo - RM364903
