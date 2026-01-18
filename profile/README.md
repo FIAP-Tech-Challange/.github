@@ -4,6 +4,10 @@
 [![Microservices](https://img.shields.io/badge/microservices-4-blue)](https://github.com/FIAP-Tech-Challange)
 [![Tests](https://img.shields.io/badge/tests-663%20passing-success)](https://github.com/FIAP-Tech-Challange)
 
+## ▶️ Apresentação 
+
+https://www.youtube.com/watch?v=G0lWkS6JZ2Q
+
 ## 📲 Equipe - Grupo 191
 
 - davidasteixeira
